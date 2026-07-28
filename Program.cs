@@ -30,8 +30,7 @@ while (true)
 
             if (currentIndex < history.Count - 1)
             {
-                var itemsToRemove = history.Count - 1 - currentIndex;
-                history.RemoveRange(currentIndex + 1, itemsToRemove);
+                currentIndex = history.Count - 1;
             }
 
             history.Add(argument);
