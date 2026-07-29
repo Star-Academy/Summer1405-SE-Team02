@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace SearchHistoryApp
 {
@@ -8,113 +6,43 @@ namespace SearchHistoryApp
     {
         static void Main(string[] args)
         {
-            var history = new List<string>();
-
-            Stack<int> backIndex = new Stack<int>();
-            Stack<int> frontIndex = new Stack<int>();
-
-            var currentIndex = -1;
+            var manager = new SearchHistoryManager();
 
             while (true)
             {
-                Console.Write("> ");
+                Console.Write(Messages.Prompt);
                 var input = Console.ReadLine();
 
                 if (string.IsNullOrWhiteSpace(input)) continue;
 
-                var parts = input.Split(' ', 2);
-                var command = parts[0].ToUpper();
-                var argument = parts.Length > 1 ? parts[1] : "";
+                var command_argument = input.Split(' ', 2);
+                var command = command_argument[0].ToUpper();
+                var argument = command_argument.Length > 1 ? command_argument[1] : string.Empty;
 
                 switch (command)
                 {
                     case "EXIT":
                         return;
-
                     case "SEARCH":
-                        if (string.IsNullOrWhiteSpace(argument))
-                        {
-                            Console.WriteLine("Please enter a word to search.");
-                            break;
-                        }
-
-                        if (currentIndex >= 0)
-                        {
-                            backIndex.Push(currentIndex);
-                        }
-
-                        history.Add(argument);
-
-                        currentIndex = history.Count - 1;
-
-                        frontIndex.Clear();
-
-                        Console.WriteLine($"current: {history[currentIndex]}");
+                        manager.Search(argument);
                         break;
-
                     case "CURRENT":
-                        if (currentIndex >= 0 && currentIndex < history.Count)
-                            Console.WriteLine($"current: {history[currentIndex]}");
-                        else
-                            Console.WriteLine("History is empty.");
+                        manager.PrintCurrent();
                         break;
-
                     case "BACK":
-                        if (backIndex.Count != 0)
-                        {
-                            frontIndex.Push(currentIndex);
-
-                            currentIndex = backIndex.Pop();
-
-                            Console.WriteLine($"current: {history[currentIndex]}");
-                        }
-                        else
-                        {
-                            Console.WriteLine("There is no back");
-                        }
+                        manager.GoBack();
                         break;
-
                     case "FORWARD":
-                        if (frontIndex.Count != 0)
-                        {
-                            backIndex.Push(currentIndex);
-
-                            currentIndex = frontIndex.Pop();
-
-                            Console.WriteLine($"current: {history[currentIndex]}");
-                        }
-                        else
-                        {
-                            Console.WriteLine("There is no forward");
-                        }
+                        manager.GoForward();
                         break;
-
                     case "STATS":
-                        if (history.Count == 0)
-                        {
-                            Console.WriteLine("History is empty.");
-                            break;
-                        }
-
-                        var topSearches = history
-                            .GroupBy(word => word)
-                            .Select(group => new { Word = group.Key, Count = group.Count() })
-                            .OrderByDescending(item => item.Count)
-                            .Take(3);
-
-                        foreach (var item in topSearches)
-                        {
-                            Console.WriteLine($"{item.Word}: {item.Count}");
-                        }
+                        manager.PrintStats();
                         break;
-
                     case "UNIQUE":
-                        var uniqueCount = history.Distinct().Count();
-                        Console.WriteLine(uniqueCount);
+                        manager.PrintUnique();
                         break;
-
                     default:
-                        Console.WriteLine($"Command '{command}' not implemented yet!");
+                        Console.WriteLine(string.Format(Messages.CommandNotImplemented, command));
                         break;
                 }
             }
