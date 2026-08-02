@@ -1,74 +1,37 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Data.SqlClient;
-using Npgsql;
+﻿using System;
+using QueryBuilder.Models;
+using QueryBuilder.Compilers;
+using QueryBuilder.Runners;
 
-var myQuery = new Query()
-    .From("student")
-    .Select("firstname", "lastname", "grade")
-    .Where("ismale", true);
-
-ICompiler pgCompiler = new PostgresCompiler();
-var pgResult = pgCompiler.Compile(myQuery);
-
-Console.WriteLine("--- Executing on PostgreSQL ---");
-Console.WriteLine("Generated SQL: " + pgResult.Sql);
-
-string pgConnString = "Host=localhost;Port=5432;Database=mohaymen;Username=postgres;Password=postgres";
-using (var pgConn = new NpgsqlConnection(pgConnString))
+namespace QueryBuilder
 {
-    pgConn.Open();
-    using (var cmd = new NpgsqlCommand(pgResult.Sql, pgConn))
+    public class Program
     {
-        foreach (var param in pgResult.Bindings)
+        public static void Main()
         {
-            cmd.Parameters.Add(new NpgsqlParameter { Value = param.Value });
-        }
+            Environment.SetEnvironmentVariable("POSTGRES_CONNECTION_STRING", "Host=localhost;Port=5432;Database=mohaymen;Username=postgres;Password=postgres");
+            Environment.SetEnvironmentVariable("SQLSERVER_CONNECTION_STRING", "Server=localhost,1433;Database=master;User Id=sa;Password=Your_strong_Password123;TrustServerCertificate=True;");
 
-        using (var reader = cmd.ExecuteReader())
-        {
-            while (reader.Read())
-            {
-                for (int i = 0; i < reader.FieldCount; i++)
-                {
-                    Console.Write($"{reader.GetName(i)}: {reader.GetValue(i)} | ");
-                }
-                Console.WriteLine();
-            }
-        }
-    }
-}
+            var myQuery = new Query()
+                .From("student")
+                .Select("firstname", "lastname", "grade")
+                .Where("ismale", "true");
 
-Console.WriteLine();
+            var postgresClauseCompiler = new PostgresCompiler();
+            var postgresQueryCompiler = new BaseQueryCompiler(postgresClauseCompiler);
 
-ICompiler sqlCompiler = new SqlServerCompiler();
-var sqlResult = sqlCompiler.Compile(myQuery);
+            var postgresResult = postgresQueryCompiler.Compile(myQuery);
+            var postgresRunner = new PostgresRunner();
+            postgresRunner.Execute(postgresResult);
 
-Console.WriteLine("--- Executing on SQL Server ---");
-Console.WriteLine("Generated SQL: " + sqlResult.Sql);
+            Console.WriteLine();
 
-string sqlConnString = "Server=localhost,1433;Database=master;User Id=sa;Password=Your_strong_Password123;TrustServerCertificate=True;";
-using (var sqlConn = new SqlConnection(sqlConnString))
-{
-    sqlConn.Open();
-    using (var cmd = new SqlCommand(sqlResult.Sql, sqlConn))
-    {
-        foreach (var param in sqlResult.Bindings)
-        {
-            cmd.Parameters.AddWithValue(param.Key, param.Value);
-        }
+            var sqlServerClauseCompiler = new SqlServerCompiler();
+            var sqlServerQueryCompiler = new BaseQueryCompiler(sqlServerClauseCompiler);
 
-        using (var reader = cmd.ExecuteReader())
-        {
-            while (reader.Read())
-            {
-                for (int i = 0; i < reader.FieldCount; i++)
-                {
-                    Console.Write($"{reader.GetName(i)}: {reader.GetValue(i)} | ");
-                }
-                Console.WriteLine();
-            }
+            var sqlServerResult = sqlServerQueryCompiler.Compile(myQuery);
+            var sqlServerRunner = new SqlServerRunner();
+            sqlServerRunner.Execute(sqlServerResult);
         }
     }
 }
