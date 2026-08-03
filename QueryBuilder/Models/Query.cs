@@ -5,8 +5,8 @@ namespace QueryBuilder.Models
     public class Query
     {
         public string TableName { get; private set; } = string.Empty;
-        public List<string> SelectedColumns { get; private set; } = new List<string>();
-        public List<WhereCondition> Conditions { get; private set; } = new List<WhereCondition>();
+        public List<string> SelectedColumns { get; private set; } = [];
+        public List<WhereCondition> Conditions { get; private set; } = [];
 
         public Query From(string table)
         {

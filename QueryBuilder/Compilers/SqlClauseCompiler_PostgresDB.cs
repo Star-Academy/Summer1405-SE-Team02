@@ -4,7 +4,7 @@ using QueryBuilder.Models;
 
 namespace QueryBuilder.Compilers
 {
-    public class PostgresCompiler : ISqlClauseCompiler
+    public class SqlClauseCompiler_PostgresDB : ISqlClauseCompiler
     {
         public string CompileSelect(Query query)
         {
@@ -22,16 +22,14 @@ namespace QueryBuilder.Compilers
 
         public string CompileWhere(Query query, Dictionary<string, string> bindings)
         {
-            if (query.Conditions.Count == 0)
-            {
-                return string.Empty;
-            }
+            if (query.Conditions.Count == 0) return string.Empty;
 
             var whereClauses = new List<string>();
             for (var index = 0; index < query.Conditions.Count; index++)
             {
                 var condition = query.Conditions[index];
-                var parameterName = $"${index + 1}";
+
+                var parameterName = $"@p{index}";
 
                 whereClauses.Add($"\"{condition.Column}\" = {parameterName}");
                 bindings.Add(parameterName, condition.Value);

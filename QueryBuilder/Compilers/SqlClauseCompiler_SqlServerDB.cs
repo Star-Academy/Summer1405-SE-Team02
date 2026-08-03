@@ -4,7 +4,7 @@ using QueryBuilder.Models;
 
 namespace QueryBuilder.Compilers
 {
-    public class SqlServerCompiler : ISqlClauseCompiler
+    public class SqlClauseCompiler_SqlServerDB : ISqlClauseCompiler
     {
         public string CompileSelect(Query query)
         {
@@ -22,17 +22,13 @@ namespace QueryBuilder.Compilers
 
         public string CompileWhere(Query query, Dictionary<string, string> bindings)
         {
-            if (query.Conditions.Count == 0)
-            {
-                return string.Empty;
-            }
+            if (query.Conditions.Count == 0) return string.Empty;
 
             var whereClauses = new List<string>();
             for (var index = 0; index < query.Conditions.Count; index++)
             {
                 var condition = query.Conditions[index];
                 var parameterName = $"@p{index}";
-
                 var formattedValue = FormatValueForSqlServer(condition.Value);
 
                 whereClauses.Add($"[{condition.Column}] = {parameterName}");
@@ -44,11 +40,7 @@ namespace QueryBuilder.Compilers
 
         private string FormatValueForSqlServer(string rawValue)
         {
-            if (bool.TryParse(rawValue, out var boolValue))
-            {
-                return boolValue ? "1" : "0";
-            }
-
+            if (bool.TryParse(rawValue, out var boolValue)) return boolValue ? "1" : "0";
             return rawValue;
         }
     }

@@ -1,76 +1,50 @@
 using System;
 using System.Collections.Generic;
 using Npgsql;
+using QueryBuilder.Abstractions;
 using QueryBuilder.Models;
 
 namespace QueryBuilder.Runners
 {
-    public class PostgresRunner
+    public class PostgresRunner : IQueryRunner
     {
-        public void Execute(SqlResult sqlResult)
+        private readonly string _connectionString;
+        private readonly IParameterBinder _parameterBinder;
+
+        public PostgresRunner(string connectionString, IParameterBinder parameterBinder)
         {
-            var connectionString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING");
-
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                Console.WriteLine("Error: POSTGRES_CONNECTION_STRING environment variable is not set.");
-                return;
-            }
-
-            Console.WriteLine("--- Executing on PostgreSQL ---");
-            Console.WriteLine($"Generated SQL: {sqlResult.Sql}");
-
-            using (var postgresConnection = new NpgsqlConnection(connectionString))
-            {
-                postgresConnection.Open();
-
-                using (var sqlCommand = new NpgsqlCommand(sqlResult.Sql, postgresConnection))
-                {
-                    AddParameters(sqlCommand, sqlResult.Bindings);
-                    ExecuteAndPrintResults(sqlCommand);
-                }
-            }
+            _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+            _parameterBinder = parameterBinder ?? throw new ArgumentNullException(nameof(parameterBinder));
         }
 
-        private void AddParameters(NpgsqlCommand sqlCommand, Dictionary<string, string> bindings)
+        public List<Dictionary<string, string>> Execute(CompiledQuery compiledQuery)
         {
-            foreach (var parameter in bindings)
+            var results = new List<Dictionary<string, string>>();
+
+            using (var connection = new NpgsqlConnection(_connectionString))
             {
-                var npgsqlParameter = new NpgsqlParameter();
+                connection.Open();
+                using (var command = new NpgsqlCommand(compiledQuery.RawSql, connection))
+                {
+                    _parameterBinder.BindParameters(command, compiledQuery.Bindings);
 
-                if (bool.TryParse(parameter.Value, out var boolValue))
-                {
-                    npgsqlParameter.Value = boolValue;
-                }
-                else if (int.TryParse(parameter.Value, out var intValue))
-                {
-                    npgsqlParameter.Value = intValue;
-                }
-                else
-                {
-                    npgsqlParameter.Value = parameter.Value;
-                }
-
-                sqlCommand.Parameters.Add(npgsqlParameter);
-            }
-        }
-
-        private void ExecuteAndPrintResults(NpgsqlCommand sqlCommand)
-        {
-            using (var dataReader = sqlCommand.ExecuteReader())
-            {
-                while (dataReader.Read())
-                {
-                    for (var index = 0; index < dataReader.FieldCount; index++)
+                    using (var reader = command.ExecuteReader())
                     {
-                        var columnName = dataReader.GetName(index);
-                        var columnValue = dataReader.GetValue(index).ToString();
-
-                        Console.Write($"{columnName}: {columnValue} | ");
+                        while (reader.Read())
+                        {
+                            var row = new Dictionary<string, string>();
+                            for (var index = 0; index < reader.FieldCount; index++)
+                            {
+                                var columnName = reader.GetName(index);
+                                var columnValue = reader.GetValue(index)?.ToString() ?? string.Empty;
+                                row.Add(columnName, columnValue);
+                            }
+                            results.Add(row);
+                        }
                     }
-                    Console.WriteLine();
                 }
             }
+            return results;
         }
     }
 }

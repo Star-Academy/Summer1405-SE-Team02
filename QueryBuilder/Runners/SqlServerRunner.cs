@@ -1,79 +1,50 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
+using QueryBuilder.Abstractions;
 using QueryBuilder.Models;
 
 namespace QueryBuilder.Runners
 {
-    public class SqlServerRunner
+    public class SqlServerRunner : IQueryRunner
     {
-        public void Execute(SqlResult sqlResult)
+        private readonly string _connectionString;
+        private readonly IParameterBinder _parameterBinder;
+
+        public SqlServerRunner(string connectionString, IParameterBinder parameterBinder)
         {
-            var connectionString = Environment.GetEnvironmentVariable("SQLSERVER_CONNECTION_STRING");
-
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                Console.WriteLine("Error: SQLSERVER_CONNECTION_STRING environment variable is not set.");
-                return;
-            }
-
-            Console.WriteLine("--- Executing on SQL Server ---");
-            Console.WriteLine($"Generated SQL: {sqlResult.Sql}");
-
-            using (var sqlServerConnection = new SqlConnection(connectionString))
-            {
-                sqlServerConnection.Open();
-
-                using (var sqlCommand = new SqlCommand(sqlResult.Sql, sqlServerConnection))
-                {
-                    AddParameters(sqlCommand, sqlResult.Bindings);
-                    ExecuteAndPrintResults(sqlCommand);
-                }
-            }
+            _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+            _parameterBinder = parameterBinder ?? throw new ArgumentNullException(nameof(parameterBinder));
         }
 
-        private void AddParameters(SqlCommand sqlCommand, Dictionary<string, string> bindings)
+        public List<Dictionary<string, string>> Execute(CompiledQuery compiledQuery)
         {
-            foreach (var parameter in bindings)
+            var results = new List<Dictionary<string, string>>();
+
+            using (var connection = new SqlConnection(_connectionString))
             {
-                var sqlParameter = new SqlParameter
+                connection.Open();
+                using (var command = new SqlCommand(compiledQuery.RawSql, connection))
                 {
-                    ParameterName = parameter.Key
-                };
+                    _parameterBinder.BindParameters(command, compiledQuery.Bindings);
 
-                if (bool.TryParse(parameter.Value, out var boolValue))
-                {
-                    sqlParameter.Value = boolValue;
-                }
-                else if (int.TryParse(parameter.Value, out var intValue))
-                {
-                    sqlParameter.Value = intValue;
-                }
-                else
-                {
-                    sqlParameter.Value = parameter.Value;
-                }
-
-                sqlCommand.Parameters.Add(sqlParameter);
-            }
-        }
-
-        private void ExecuteAndPrintResults(SqlCommand sqlCommand)
-        {
-            using (var dataReader = sqlCommand.ExecuteReader())
-            {
-                while (dataReader.Read())
-                {
-                    for (var index = 0; index < dataReader.FieldCount; index++)
+                    using (var reader = command.ExecuteReader())
                     {
-                        var columnName = dataReader.GetName(index);
-                        var columnValue = dataReader.GetValue(index).ToString();
-
-                        Console.Write($"{columnName}: {columnValue} | ");
+                        while (reader.Read())
+                        {
+                            var row = new Dictionary<string, string>();
+                            for (var index = 0; index < reader.FieldCount; index++)
+                            {
+                                var columnName = reader.GetName(index);
+                                var columnValue = reader.GetValue(index)?.ToString() ?? string.Empty;
+                                row.Add(columnName, columnValue);
+                            }
+                            results.Add(row);
+                        }
                     }
-                    Console.WriteLine();
                 }
             }
+            return results;
         }
     }
 }
