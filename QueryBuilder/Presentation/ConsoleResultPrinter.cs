@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace QueryBuilder.Presentation
 {
-    public static class ConsoleResultPrinter
+    internal static class ConsoleResultPrinter
     {
         public static void PrintResults(List<Dictionary<string, string>> results)
         {

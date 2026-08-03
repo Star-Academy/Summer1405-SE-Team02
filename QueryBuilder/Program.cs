@@ -10,7 +10,7 @@ using QueryBuilder.Presentation;
 
 namespace QueryBuilder
 {
-    public class Program
+    internal class Program
     {
         public static void Main()
         {
@@ -30,7 +30,7 @@ namespace QueryBuilder
                 .Select("firstname", "lastname", "grade")
                 .Where("ismale", "true");
 
-            var parameterBinder = new DefaultParameterBinder();
+            var parameterBinder = new ParameterBinder();
 
             var postgresClauseCompiler = new SqlClauseCompiler_PostgresDB();
             var postgresQueryCompiler = new QueryCompiler(postgresClauseCompiler);

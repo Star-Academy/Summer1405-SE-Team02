@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace QueryBuilder.Models
 {
-    public class Query
+    public sealed class Query
     {
         public string TableName { get; private set; } = string.Empty;
         public List<string> SelectedColumns { get; private set; } = [];

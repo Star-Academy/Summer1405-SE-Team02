@@ -1,6 +1,6 @@
 namespace QueryBuilder.Models
 {
-    public class WhereCondition
+    public sealed class WhereCondition
     {
         public string Column { get; set; }
         public string Value { get; set; }

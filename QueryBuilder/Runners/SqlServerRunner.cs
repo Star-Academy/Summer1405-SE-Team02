@@ -6,7 +6,7 @@ using QueryBuilder.Models;
 
 namespace QueryBuilder.Runners
 {
-    public class SqlServerRunner : IQueryRunner
+    internal sealed class SqlServerRunner : IQueryRunner
     {
         private readonly string _connectionString;
         private readonly IParameterBinder _parameterBinder;

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace QueryBuilder.Constants
 {
-    public static class Messages
+    internal static class Messages
     {
         public static readonly Dictionary<string, string> Dictionary = new Dictionary<string, string>
         {

@@ -4,7 +4,7 @@ using QueryBuilder.Models;
 
 namespace QueryBuilder.Compilers
 {
-    public class SqlClauseCompiler_SqlServerDB : ISqlClauseCompiler
+    internal sealed class SqlClauseCompiler_SqlServerDB : ISqlClauseCompiler
     {
         public string CompileSelect(Query query)
         {

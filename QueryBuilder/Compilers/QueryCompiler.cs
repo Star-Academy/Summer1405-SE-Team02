@@ -5,7 +5,7 @@ using QueryBuilder.Models;
 
 namespace QueryBuilder.Compilers
 {
-    public class QueryCompiler : IQueryCompiler
+    internal sealed class QueryCompiler : IQueryCompiler
     {
         private readonly ISqlClauseCompiler _sqlClauseCompiler;
 

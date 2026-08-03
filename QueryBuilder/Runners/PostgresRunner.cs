@@ -6,7 +6,7 @@ using QueryBuilder.Models;
 
 namespace QueryBuilder.Runners
 {
-    public class PostgresRunner : IQueryRunner
+    internal sealed class PostgresRunner : IQueryRunner
     {
         private readonly string _connectionString;
         private readonly IParameterBinder _parameterBinder;

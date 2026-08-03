@@ -4,7 +4,7 @@ using QueryBuilder.Abstractions;
 
 namespace QueryBuilder.Runners
 {
-    public class DefaultParameterBinder : IParameterBinder
+    internal sealed class ParameterBinder : IParameterBinder
     {
         public void BindParameters(IDbCommand command, Dictionary<string, string> bindings)
         {

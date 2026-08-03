@@ -3,7 +3,7 @@ using System.IO;
 
 namespace QueryBuilder.Infrastructure
 {
-    public static class EnvironmentLoader
+    internal static class EnvironmentLoader
     {
         public static void LoadEnvironmentVariables()
         {

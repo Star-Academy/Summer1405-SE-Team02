@@ -4,7 +4,7 @@ using QueryBuilder.Models;
 
 namespace QueryBuilder.Compilers
 {
-    public class SqlClauseCompiler_PostgresDB : ISqlClauseCompiler
+    internal sealed class SqlClauseCompiler_PostgresDB : ISqlClauseCompiler
     {
         public string CompileSelect(Query query)
         {
