@@ -8,6 +8,8 @@ namespace QueryBuilder.Runners
     {
         public void BindParameters(IDbCommand command, Dictionary<string, string> bindings)
         {
+            if (command is null) throw new ArgumentNullException(nameof(command));
+            if (bindings is null) throw new ArgumentNullException(nameof(bindings));
             foreach (var parameter in bindings)
             {
                 var dbParameter = command.CreateParameter();

@@ -16,6 +16,7 @@ namespace QueryBuilder.Compilers
 
         public CompiledQuery Compile(Query query)
         {
+            if (query == null) throw new ArgumentNullException(nameof(query));
             var result = new CompiledQuery();
             var sqlBuilder = new StringBuilder();
 
