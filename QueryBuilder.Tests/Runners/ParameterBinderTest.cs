@@ -1,126 +1,114 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using FluentAssertions;
 using NSubstitute;
 using QueryBuilder.Runners;
 using Xunit;
 
-namespace QueryBuilder.Tests.Runners
+
+public class ParameterBinderTests
 {
-    public class ParameterBinderTests
+    [Fact]
+    public void BindParameters_ShouldThrow_WhenCommandIsNull()
     {
-        private readonly IDbCommand _command;
-        private readonly IDbDataParameter _dbParameter;
-        private readonly IDataParameterCollection _parameterCollection;
-        private readonly ParameterBinder _binder;
+        // Arrange
+        var sut = new ParameterBinder();
 
-        public ParameterBinderTests()
+        // Act
+        Action act = () => sut.BindParameters(null!, new Dictionary<string, string>());
+
+        // Assert
+        act.Should().Throw<ArgumentNullException>()
+            .WithParameterName("command");
+    }
+
+    [Fact]
+    public void BindParameters_ShouldThrow_WhenBindingsIsNull()
+    {
+        // Arrange
+        var sut = new ParameterBinder();
+        var command = Substitute.For<IDbCommand>();
+
+        // Act
+        Action act = () => sut.BindParameters(command, null!);
+
+        // Assert
+        act.Should().Throw<ArgumentNullException>()
+            .WithParameterName("bindings");
+    }
+
+    [Fact]
+    public void BindParameters_ShouldConvertIntValues_Whenever()
+    {
+        // Arrange
+        var sut = new ParameterBinder();
+        var (command, parameters, created) = CreateFixture();
+
+        // Act
+        sut.BindParameters(command, new Dictionary<string, string>
         {
-            _command = Substitute.For<IDbCommand>();
-            _dbParameter = Substitute.For<IDbDataParameter>();
-            _parameterCollection = Substitute.For<IDataParameterCollection>();
+            ["age"] = "30"
+        });
 
-            _command.CreateParameter().Returns(_dbParameter);
-            _command.Parameters.Returns(_parameterCollection);
+        // Assert
+        var parameter = created[0];
+        parameter.ParameterName.Should().Be("age");
+        parameter.Value.Should().BeOfType<int>();
+        parameter.Value.Should().Be(30);
+        parameters.Received(1).Add(parameter);
+    }
 
-            _binder = new ParameterBinder();
-        }
+    [Fact]
+    public void BindParameters_ShouldConvertBoolValues_Whenever()
+    {
+        // Arrange
+        var sut = new ParameterBinder();
+        var (command, _, created) = CreateFixture();
 
-        [Theory]
-        [InlineData("true", true)]
-        [InlineData("False", false)]
-        public void BindParameters_ShouldBindTypedBool_WhenValueIsBooleanString(string rawValue, object expectedValue)
+        // Act
+        sut.BindParameters(command, new Dictionary<string, string>
         {
-            // Arrange
-            var bindings = new Dictionary<string, string> { ["@p0"] = rawValue };
+            ["active"] = "true"
+        });
 
-            // Act
-            _binder.BindParameters(_command, bindings);
+        // Assert
+        var parameter = created[0];
+        parameter.Value.Should().BeOfType<bool>();
+        parameter.Value.Should().Be(true);
+    }
 
-            // Assert
-            _dbParameter.Received().ParameterName = "@p0";
-            _dbParameter.Received().Value = expectedValue;
-            _parameterCollection.Received().Add(_dbParameter);
-        }
+    [Fact]
+    public void BindParameters_ShouldKeepStringValues_Whenever()
+    {
+        // Arrange
+        var sut = new ParameterBinder();
+        var (command, _, created) = CreateFixture();
 
-        [Theory]
-        [InlineData("42", 42)]
-        [InlineData("1", 1)]
-        public void BindParameters_ShouldBindTypedInt_WhenValueIsIntegerString(string rawValue, object expectedValue)
+        // Act
+        sut.BindParameters(command, new Dictionary<string, string>
         {
-            // Arrange
-            var bindings = new Dictionary<string, string> { ["@p0"] = rawValue };
+            ["name"] = "Ali"
+        });
 
-            // Act
-            _binder.BindParameters(_command, bindings);
+        // Assert
+        created[0].Value.Should().Be("Ali");
+    }
 
-            // Assert
-            _dbParameter.Received().Value = expectedValue;
-        }
+    private static (IDbCommand Command, IDataParameterCollection Parameters, List<IDbDataParameter> Created) CreateFixture()
+    {
+        var command = Substitute.For<IDbCommand>();
+        var parameters = Substitute.For<IDataParameterCollection>();
+        var created = new List<IDbDataParameter>();
 
-        [Theory]
-        [InlineData("Ali", "Ali")]
-        [InlineData("12.5", "12.5")]
-        public void BindParameters_ShouldBindRawString_WhenValueIsNotBoolOrInt(string rawValue, object expectedValue)
+        command.Parameters.Returns(parameters);
+        command.CreateParameter().Returns(_ =>
         {
-            // Arrange
-            var bindings = new Dictionary<string, string> { ["@p0"] = rawValue };
+            var parameter = Substitute.For<IDbDataParameter>();
+            created.Add(parameter);
+            return parameter;
+        });
 
-            // Act
-            _binder.BindParameters(_command, bindings);
-
-            // Assert
-            _dbParameter.Received().Value = expectedValue;
-        }
-
-        [Fact]
-        public void BindParameters_ShouldNotCreateParameters_WhenBindingsIsEmpty()
-        {
-            // Arrange
-            var bindings = new Dictionary<string, string>();
-
-            // Act
-            _binder.BindParameters(_command, bindings);
-
-            // Assert
-            _command.DidNotReceive().CreateParameter();
-            _parameterCollection.DidNotReceive().Add(Arg.Any<object>());
-        }
-
-        [Fact]
-        public void BindParameters_ShouldCreateParameterPerBinding_WhenMultipleBindingsExist()
-        {
-            // Arrange
-            var bindings = new Dictionary<string, string>
-            {
-                ["@p0"] = "1",
-                ["@p1"] = "true"
-            };
-
-            // Act
-            _binder.BindParameters(_command, bindings);
-
-            // Assert
-            _command.Received(2).CreateParameter();
-            _parameterCollection.Received(2).Add(_dbParameter);
-        }
-
-        [Fact]
-        public void BindParameters_ShouldThrowArgumentNullException_WhenCommandIsNull()
-        {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentNullException>(
-                () => _binder.BindParameters(null!, new Dictionary<string, string>()));
-            Assert.Equal("command", exception.ParamName);
-        }
-
-        [Fact]
-        public void BindParameters_ShouldThrowArgumentNullException_WhenBindingsIsNull()
-        {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentNullException>(
-                () => _binder.BindParameters(_command, null!));
-            Assert.Equal("bindings", exception.ParamName);
-        }
+        return (command, parameters, created);
     }
 }

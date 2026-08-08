@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using FluentAssertions;
 using QueryBuilder.Compilers;
 using QueryBuilder.Models;
 using Xunit;
@@ -7,7 +8,7 @@ namespace QueryBuilder.Tests.Compilers
 {
     public class SqlClauseCompiler_PostgresDBTests
     {
-        private readonly SqlClauseCompiler_PostgresDB _compiler = new();
+        private readonly SqlClauseCompiler_PostgresDB _sut = new();
 
         [Fact]
         public void CompileSelect_ShouldReturnQuotedColumns_WhenColumnsAreSelected()
@@ -16,10 +17,10 @@ namespace QueryBuilder.Tests.Compilers
             var query = new Query().From("student").Select("firstname", "lastname");
 
             // Act
-            var result = _compiler.CompileSelect(query);
+            var result = _sut.CompileSelect(query);
 
             // Assert
-            Assert.Equal("SELECT \"firstname\", \"lastname\"", result);
+            result.Should().Be("SELECT \"firstname\", \"lastname\"");
         }
 
         [Fact]
@@ -29,23 +30,23 @@ namespace QueryBuilder.Tests.Compilers
             var query = new Query().From("student");
 
             // Act
-            var result = _compiler.CompileSelect(query);
+            var result = _sut.CompileSelect(query);
 
             // Assert
-            Assert.Equal("SELECT *", result);
+            result.Should().Be("SELECT *");
         }
 
         [Fact]
-        public void CompileFrom_ShouldReturnQuotedTableName_WhenCalled()
+        public void CompileFrom_ShouldReturnQuotedTableName_Whenever()
         {
             // Arrange
             var query = new Query().From("student");
 
             // Act
-            var result = _compiler.CompileFrom(query);
+            var result = _sut.CompileFrom(query);
 
             // Assert
-            Assert.Equal("FROM \"student\"", result);
+            result.Should().Be("FROM \"student\"");
         }
 
         [Fact]
@@ -56,11 +57,11 @@ namespace QueryBuilder.Tests.Compilers
             var bindings = new Dictionary<string, string>();
 
             // Act
-            var result = _compiler.CompileWhere(query, bindings);
+            var result = _sut.CompileWhere(query, bindings);
 
             // Assert
-            Assert.Equal(string.Empty, result);
-            Assert.Empty(bindings);
+            result.Should().BeEmpty();
+            bindings.Should().BeEmpty();
         }
 
         [Fact]
@@ -71,16 +72,16 @@ namespace QueryBuilder.Tests.Compilers
             var bindings = new Dictionary<string, string>();
 
             // Act
-            var result = _compiler.CompileWhere(query, bindings);
+            var result = _sut.CompileWhere(query, bindings);
 
             // Assert
-            Assert.Equal("WHERE \"age\" = @p0", result);
-            Assert.Single(bindings);
-            Assert.Equal("20", bindings["@p0"]);
+            result.Should().Be("WHERE \"age\" = @p0");
+            bindings.Should().HaveCount(1);
+            bindings["@p0"].Should().Be("20");
         }
 
         [Fact]
-        public void CompileWhere_ShouldJoinWithAndAndOrderParameters_WhenMultipleConditionsExist()
+        public void CompileWhere_ShouldJoinWithAndOrderParameters_WhenMultipleConditionsExist()
         {
             // Arrange
             var query = new Query().From("student")
@@ -89,13 +90,13 @@ namespace QueryBuilder.Tests.Compilers
             var bindings = new Dictionary<string, string>();
 
             // Act
-            var result = _compiler.CompileWhere(query, bindings);
+            var result = _sut.CompileWhere(query, bindings);
 
             // Assert
-            Assert.Equal("WHERE \"age\" = @p0 AND \"city\" = @p1", result);
-            Assert.Equal(2, bindings.Count);
-            Assert.Equal("20", bindings["@p0"]);
-            Assert.Equal("Tehran", bindings["@p1"]);
+            result.Should().Be("WHERE \"age\" = @p0 AND \"city\" = @p1");
+            bindings.Should().HaveCount(2);
+            bindings["@p0"].Should().Be("20");
+            bindings["@p1"].Should().Be("Tehran");
         }
     }
 }

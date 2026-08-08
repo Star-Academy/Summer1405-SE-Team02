@@ -1,11 +1,12 @@
 using System.Collections.Generic;
 using System.Data;
+using QueryBuilder.Abstractions;
 
 namespace QueryBuilder.Runners
 {
-    internal static class ResultSetMapper
+    internal sealed class DataReaderFormatter : IDataReaderFormatter
     {
-        public static List<Dictionary<string, string>> Map(IDataReader reader)
+        public List<Dictionary<string, string>> Format(IDataReader reader)
         {
             var results = new List<Dictionary<string, string>>();
 

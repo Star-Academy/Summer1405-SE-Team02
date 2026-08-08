@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using FluentAssertions;
 using NSubstitute;
 using QueryBuilder.Abstractions;
 using QueryBuilder.Compilers;
@@ -11,12 +12,12 @@ namespace QueryBuilder.Tests.Compilers
     public class QueryCompilerTests
     {
         private readonly ISqlClauseCompiler _clauseCompiler;
-        private readonly QueryCompiler _compiler;
+        private readonly QueryCompiler _sut;
 
         public QueryCompilerTests()
         {
             _clauseCompiler = Substitute.For<ISqlClauseCompiler>();
-            _compiler = new QueryCompiler(_clauseCompiler);
+            _sut = new QueryCompiler(_clauseCompiler);
         }
 
         [Fact]
@@ -32,10 +33,10 @@ namespace QueryBuilder.Tests.Compilers
                 .Returns("WHERE \"ismale\" = @p0");
 
             // Act
-            var result = _compiler.Compile(query);
+            var result = _sut.Compile(query);
 
             // Assert
-            Assert.Equal("SELECT * FROM \"student\" WHERE \"ismale\" = @p0", result.RawSql);
+            result.RawSql.Should().Be("SELECT * FROM \"student\" WHERE \"ismale\" = @p0");
             _clauseCompiler.Received(1).CompileSelect(query);
             _clauseCompiler.Received(1).CompileFrom(query);
             _clauseCompiler.Received(1).CompileWhere(query, result.Bindings);
@@ -58,11 +59,11 @@ namespace QueryBuilder.Tests.Compilers
                 });
 
             // Act
-            var result = _compiler.Compile(query);
+            var result = _sut.Compile(query);
 
             // Assert
-            Assert.Single(result.Bindings);
-            Assert.Equal("true", result.Bindings["@p0"]);
+            result.Bindings.Should().HaveCount(1);
+            result.Bindings["@p0"].Should().Be("true");
         }
 
         [Theory]
@@ -81,18 +82,22 @@ namespace QueryBuilder.Tests.Compilers
                 .Returns(whereClause);
 
             // Act
-            var result = _compiler.Compile(query);
+            var result = _sut.Compile(query);
 
             // Assert
-            Assert.Equal("SELECT * FROM \"student\"", result.RawSql);
+            result.RawSql.Should().Be("SELECT * FROM \"student\"");
         }
 
         [Fact]
         public void Constructor_ShouldThrowArgumentNullException_WhenSqlClauseCompilerIsNull()
         {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentNullException>(() => new QueryCompiler(null!));
-            Assert.Equal("sqlClauseCompiler", exception.ParamName);
+            // Arrange
+            //act
+            Action act = () => new QueryCompiler(null!);
+
+            // Assert
+            act.Should().Throw<ArgumentNullException>()
+                .WithParameterName("sqlClauseCompiler");
         }
     }
 }

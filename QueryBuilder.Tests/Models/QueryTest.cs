@@ -1,4 +1,5 @@
-﻿using QueryBuilder.Models;
+﻿using FluentAssertions;
+using QueryBuilder.Models;
 using Xunit;
 
 namespace QueryBuilder.Tests.Models
@@ -6,76 +7,90 @@ namespace QueryBuilder.Tests.Models
     public class QueryTests
     {
         [Fact]
-        public void From_ShouldSetTableName_WhenCalled()
+        public void From_ShouldSetTableName_Whenever()
         {
-            // Arrange & Act
-            var query = new Query().From("student");
+            // Arrange
+            var sut = new Query();
+
+            // Act
+            sut.From("student");
 
             // Assert
-            Assert.Equal("student", query.TableName);
+            sut.TableName.Should().Be("student");
         }
 
         [Fact]
         public void Select_ShouldAddColumnsToList_WhenColumnsPassed()
         {
-            // Arrange & Act
-            var query = new Query().From("student").Select("firstname", "lastname");
+            // Arrange
+            var sut = new Query().From("student");
+
+            // Act
+            sut.Select("firstname", "lastname");
 
             // Assert
-            Assert.Equal(new[] { "firstname", "lastname" }, query.SelectedColumns);
+            sut.SelectedColumns.Should().BeEquivalentTo(new[] { "firstname", "lastname" });
         }
 
         [Fact]
         public void Select_ShouldKeepColumnsEmpty_WhenNoColumnsPassed()
         {
-            // Arrange & Act
-            var query = new Query().From("student").Select();
+            // Arrange
+            var sut = new Query().From("student");
+
+            // Act
+            sut.Select();
 
             // Assert
-            Assert.Empty(query.SelectedColumns);
+            sut.SelectedColumns.Should().BeEmpty();
         }
 
         [Fact]
-        public void Where_ShouldAddConditionToList_WhenCalled()
+        public void Where_ShouldAddConditionToList_Whenever()
         {
-            // Arrange & Act
-            var query = new Query().From("student").Where("age", "20");
+            // Arrange
+            var sut = new Query().From("student");
+
+            // Act
+            sut.Where("age", "20");
 
             // Assert
-            Assert.Single(query.Conditions);
-            Assert.Equal("age", query.Conditions[0].Column);
-            Assert.Equal("20", query.Conditions[0].Value);
+            sut.Conditions.Should().HaveCount(1);
+            sut.Conditions[0].Column.Should().Be("age");
+            sut.Conditions[0].Value.Should().Be("20");
         }
 
         [Fact]
-        public void Where_ShouldPreserveConditionsOrder_WhenCalledMultipleTimes()
+        public void Where_ShouldPreserveConditionsOrder_WheneverMultipleTimes()
         {
-            // Arrange & Act
-            var query = new Query().From("student")
-                .Where("age", "20")
+            // Arrange
+            var sut = new Query().From("student");
+
+            // Act
+            sut.Where("age", "20")
                 .Where("city", "Tehran");
 
             // Assert
-            Assert.Equal(2, query.Conditions.Count);
-            Assert.Equal("age", query.Conditions[0].Column);
-            Assert.Equal("city", query.Conditions[1].Column);
+            sut.Conditions.Should().HaveCount(2);
+            sut.Conditions[0].Column.Should().Be("age");
+            sut.Conditions[1].Column.Should().Be("city");
         }
 
         [Fact]
         public void FluentApi_ShouldReturnSameInstance_WhenMethodsChained()
         {
             // Arrange
-            var query = new Query();
+            var sut = new Query();
 
             // Act
-            var afterFrom = query.From("student");
+            var afterFrom = sut.From("student");
             var afterSelect = afterFrom.Select("id");
             var afterWhere = afterSelect.Where("age", "20");
 
             // Assert
-            Assert.Same(query, afterFrom);
-            Assert.Same(query, afterSelect);
-            Assert.Same(query, afterWhere);
+            afterFrom.Should().BeSameAs(sut);
+            afterSelect.Should().BeSameAs(sut);
+            afterWhere.Should().BeSameAs(sut);
         }
     }
 }

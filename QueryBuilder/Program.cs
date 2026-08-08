@@ -31,11 +31,12 @@ namespace QueryBuilder
                 .Where("ismale", "true");
 
             var parameterBinder = new ParameterBinder();
+            var formatter = new DataReaderFormatter();
 
             var postgresClauseCompiler = new SqlClauseCompiler_PostgresDB();
             var postgresQueryCompiler = new QueryCompiler(postgresClauseCompiler);
             var postgresResult = postgresQueryCompiler.Compile(myQuery);
-            var postgresRunner = new PostgresRunner(postgresConn, parameterBinder);
+            var postgresRunner = new PostgresRunner(postgresConn, parameterBinder, formatter);
 
             Console.WriteLine(Messages.Dictionary["PostgresHeader"]);
             Console.WriteLine(string.Format(Messages.Dictionary["GeneratedSql"], postgresResult.RawSql));
@@ -48,7 +49,7 @@ namespace QueryBuilder
             var sqlServerClauseCompiler = new SqlClauseCompiler_SqlServerDB();
             var sqlServerQueryCompiler = new QueryCompiler(sqlServerClauseCompiler);
             var sqlServerResult = sqlServerQueryCompiler.Compile(myQuery);
-            var sqlServerRunner = new SqlServerRunner(sqlServerConn, parameterBinder);
+            var sqlServerRunner = new SqlServerRunner(sqlServerConn, parameterBinder, formatter);
 
             Console.WriteLine(Messages.Dictionary["SqlServerHeader"]);
             Console.WriteLine(string.Format(Messages.Dictionary["GeneratedSql"], sqlServerResult.RawSql));

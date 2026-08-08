@@ -11,11 +11,16 @@ namespace QueryBuilder.Runners
     {
         private readonly string _connectionString;
         private readonly IParameterBinder _parameterBinder;
+        private readonly IDataReaderFormatter _formatter;
 
-        public SqlServerRunner(string connectionString, IParameterBinder parameterBinder)
+        public SqlServerRunner(
+            string connectionString,
+            IParameterBinder parameterBinder,
+            IDataReaderFormatter formatter)
         {
             _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
             _parameterBinder = parameterBinder ?? throw new ArgumentNullException(nameof(parameterBinder));
+            _formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
         }
 
         [ExcludeFromCodeCoverage]
@@ -31,7 +36,7 @@ namespace QueryBuilder.Runners
 
                     using (var reader = command.ExecuteReader())
                     {
-                        return ResultSetMapper.Map(reader);
+                        return _formatter.Format(reader);
                     }
                 }
             }
