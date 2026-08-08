@@ -1,35 +1,34 @@
 using System.Data;
-using Moq;
+using NSubstitute;
 using QueryBuilder.Runners;
 using Xunit;
 
 public class ResultSetMapperTests
 {
     [Fact]
-    public void Map_Should_Return_Empty_List_When_No_Rows()
+    public void Map_ShouldReturnEmptyList_WhenNoRows()
     {
-        var reader = new Mock<IDataReader>();
-        reader.Setup(r => r.Read()).Returns(false);
+        var reader = Substitute.For<IDataReader>();
+        reader.Read().Returns(false);
 
-        var result = ResultSetMapper.Map(reader.Object);
+        var result = ResultSetMapper.Map(reader);
 
         Assert.Empty(result);
     }
 
     [Fact]
-    public void Map_Should_Convert_Rows_To_Dictionaries()
+    public void Map_ShouldConvertRowsToDictionaries_WhenCalled()
     {
-        var reader = new Mock<IDataReader>();
-        var readCount = 0;
+        var reader = Substitute.For<IDataReader>();
 
-        reader.Setup(r => r.Read()).Returns(() => ++readCount <= 2);
-        reader.Setup(r => r.FieldCount).Returns(2);
-        reader.Setup(r => r.GetName(0)).Returns("id");
-        reader.Setup(r => r.GetName(1)).Returns("name");
-        reader.Setup(r => r.GetValue(0)).Returns(7);
-        reader.Setup(r => r.GetValue(1)).Returns("Ali");
+        reader.Read().Returns(true, true, false);
+        reader.FieldCount.Returns(2);
+        reader.GetName(0).Returns("id");
+        reader.GetName(1).Returns("name");
+        reader.GetValue(0).Returns(7);
+        reader.GetValue(1).Returns("Ali");
 
-        var result = ResultSetMapper.Map(reader.Object);
+        var result = ResultSetMapper.Map(reader);
 
         Assert.Equal(2, result.Count);
         Assert.Equal("7", result[0]["id"]);
@@ -37,17 +36,16 @@ public class ResultSetMapperTests
     }
 
     [Fact]
-    public void Map_Should_Use_Empty_String_For_Null_Values()
+    public void Map_ShouldUseEmptyString_When_NullValuesReceived()
     {
-        var reader = new Mock<IDataReader>();
-        var readCount = 0;
+        var reader = Substitute.For<IDataReader>();
 
-        reader.Setup(r => r.Read()).Returns(() => ++readCount <= 1);
-        reader.Setup(r => r.FieldCount).Returns(1);
-        reader.Setup(r => r.GetName(0)).Returns("col");
-        reader.Setup(r => r.GetValue(0)).Returns((object?)null);
+        reader.Read().Returns(true, false);
+        reader.FieldCount.Returns(1);
+        reader.GetName(0).Returns("col");
+        reader.GetValue(0).Returns(null!);
 
-        var result = ResultSetMapper.Map(reader.Object);
+        var result = ResultSetMapper.Map(reader);
 
         Assert.Equal(string.Empty, result[0]["col"]);
     }
