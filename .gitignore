@@ -489,3 +489,5 @@ $RECYCLE.BIN/
 
 # SQL Tool sessions
 *.session.sql
+
+QueryBuilder.Tests/coverage/

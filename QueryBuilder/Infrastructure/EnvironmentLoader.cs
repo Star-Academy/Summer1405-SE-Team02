@@ -1,8 +1,11 @@
 using System;
 using System.IO;
+using System.Diagnostics.CodeAnalysis;
+
 
 namespace QueryBuilder.Infrastructure
 {
+    [ExcludeFromCodeCoverage]
     internal static class EnvironmentLoader
     {
         public static void LoadEnvironmentVariables()
