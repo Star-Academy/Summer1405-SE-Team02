@@ -491,3 +491,4 @@ $RECYCLE.BIN/
 *.session.sql
 
 QueryBuilder.Tests/coverage/
+dotnet-tools.json
