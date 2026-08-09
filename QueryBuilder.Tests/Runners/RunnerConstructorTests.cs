@@ -11,7 +11,8 @@ public class RunnerConstructorTests
     [Fact]
     public void PostgresRunner_ShouldThrow_WhenConnectionStringIsNull()
     {
-        // Arrange & Act
+        // Arrange
+        // Act
         Action act = () => new PostgresRunner(
             null!,
             Substitute.For<IParameterBinder>(),
@@ -25,7 +26,8 @@ public class RunnerConstructorTests
     [Fact]
     public void PostgresRunner_ShouldThrow_WhenBinderIsNull()
     {
-        // Arrange & Act
+        // Arrange 
+        // Act
         Action act = () => new PostgresRunner(
             "cs",
             null!,
@@ -39,7 +41,8 @@ public class RunnerConstructorTests
     [Fact]
     public void PostgresRunner_ShouldThrow_WhenFormatterIsNull()
     {
-        // Arrange & Act
+        // Arrange 
+        // Act
         Action act = () => new PostgresRunner(
             "cs",
             Substitute.For<IParameterBinder>(),
@@ -53,7 +56,8 @@ public class RunnerConstructorTests
     [Fact]
     public void SqlServerRunner_ShouldThrow_WhenConnectionStringIsNull()
     {
-        // Arrange & Act
+        // Arrange 
+        // Act
         Action act = () => new SqlServerRunner(
             null!,
             Substitute.For<IParameterBinder>(),
@@ -67,7 +71,8 @@ public class RunnerConstructorTests
     [Fact]
     public void SqlServerRunner_ShouldThrow_WhenBinderIsNull()
     {
-        // Arrange & Act
+        // Arrange 
+        // Act
         Action act = () => new SqlServerRunner(
             "cs",
             null!,
@@ -81,7 +86,8 @@ public class RunnerConstructorTests
     [Fact]
     public void SqlServerRunner_ShouldThrow_WhenFormatterIsNull()
     {
-        // Arrange & Act
+        // Arrange 
+        // Act
         Action act = () => new SqlServerRunner(
             "cs",
             Substitute.For<IParameterBinder>(),
