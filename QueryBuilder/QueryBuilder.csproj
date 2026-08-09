@@ -14,6 +14,8 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="QueryBuilder.Tests" />
+    <InternalsVisibleTo Include="QueryBuilder.IntegrationTests" />
+
   </ItemGroup>
 
 </Project>
