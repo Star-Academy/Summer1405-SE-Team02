@@ -21,18 +21,19 @@ public sealed class SqlServerRunnerIntegrationTests : IClassFixture<SqlServerDat
     {
         await using var setupCommand = new SqlCommand(
             """
-            CREATE TABLE Students (
-                Id INT,
-                Name NVARCHAR(100),
-                Age INT,
-                IsMale BIT
-            );
-            INSERT INTO Students VALUES (1, N'Ali', 20, 1);
-            INSERT INTO Students VALUES (2, N'Reza', 25, 1);
-            INSERT INTO Students VALUES (3, N'Sara', 20, 0);
-            INSERT INTO Students VALUES (4, N'Maryam', 30, 0);
-            INSERT INTO Students VALUES (5, NULL, 22, 1);
-            """,
+        IF OBJECT_ID('Students', 'U') IS NOT NULL DROP TABLE Students;
+        CREATE TABLE Students (
+            Id INT,
+            Name NVARCHAR(100),
+            Age INT,
+            IsMale BIT
+        );
+        INSERT INTO Students VALUES (1, N'Ali', 20, 1);
+        INSERT INTO Students VALUES (2, N'Reza', 25, 1);
+        INSERT INTO Students VALUES (3, N'Sara', 20, 0);
+        INSERT INTO Students VALUES (4, N'Maryam', 30, 0);
+        INSERT INTO Students VALUES (5, NULL, 22, 1);
+        """,
             connection
         );
         await setupCommand.ExecuteNonQueryAsync();
@@ -146,6 +147,7 @@ public sealed class SqlServerRunnerIntegrationTests : IClassFixture<SqlServerDat
 
         await using var setupCommand = new SqlCommand(
             """
+            IF OBJECT_ID('Users', 'U') IS NOT NULL DROP TABLE Users;
             CREATE TABLE Users (
                 Id INT,
                 Username NVARCHAR(100)

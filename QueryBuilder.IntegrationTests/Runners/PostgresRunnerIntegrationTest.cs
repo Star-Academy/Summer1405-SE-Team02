@@ -21,18 +21,19 @@ public sealed class PostgresRunnerIntegrationTests : IClassFixture<PostgresDatab
     {
         await using var setupCommand = new NpgsqlCommand(
             """
-            CREATE TABLE "Students" (
-                "Id" INT,
-                "Name" TEXT,
-                "Age" INT,
-                "IsMale" BOOLEAN
-            );
-            INSERT INTO "Students" VALUES (1, 'Ali', 20, true);
-            INSERT INTO "Students" VALUES (2, 'Reza', 25, true);
-            INSERT INTO "Students" VALUES (3, 'Sara', 20, false);
-            INSERT INTO "Students" VALUES (4, 'Maryam', 30, false);
-            INSERT INTO "Students" VALUES (5, NULL, 22, true);
-            """,
+        DROP TABLE IF EXISTS "Students";
+        CREATE TABLE "Students" (
+            "Id" INT,
+            "Name" TEXT,
+            "Age" INT,
+            "IsMale" BOOLEAN
+        );
+        INSERT INTO "Students" VALUES (1, 'Ali', 20, true);
+        INSERT INTO "Students" VALUES (2, 'Reza', 25, true);
+        INSERT INTO "Students" VALUES (3, 'Sara', 20, false);
+        INSERT INTO "Students" VALUES (4, 'Maryam', 30, false);
+        INSERT INTO "Students" VALUES (5, NULL, 22, true);
+        """,
             connection
         );
         await setupCommand.ExecuteNonQueryAsync();
@@ -146,6 +147,7 @@ public sealed class PostgresRunnerIntegrationTests : IClassFixture<PostgresDatab
 
         await using var setupCommand = new NpgsqlCommand(
             """
+            DROP TABLE IF EXISTS "Users";
             CREATE TABLE "Users" (
                 "Id" INT,
                 "Username" TEXT
