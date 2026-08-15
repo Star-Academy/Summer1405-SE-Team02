@@ -4,7 +4,7 @@ using SqlKata.Execution;
 
 namespace QueryBuilderWebApplication.Services;
 
-public class StudentRepository : IStudentRepository
+public class StudentRepository : IStudentRepository, IDisposable
 {
     private const string TableName = "Students";
 
@@ -13,6 +13,11 @@ public class StudentRepository : IStudentRepository
     public StudentRepository(QueryFactory db)
     {
         _db = db;
+    }
+
+    public void Dispose()
+    {
+        _db.Connection?.Dispose();
     }
 
     public IReadOnlyList<Student> GetAll()

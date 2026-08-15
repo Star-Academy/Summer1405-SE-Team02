@@ -22,7 +22,7 @@ public class StudentsController : ControllerBase
     public IActionResult GetAll([FromQuery] string? db)
     {
         var result = _databaseResolver.Resolve(db);
-        var repository = new StudentRepository(result.Factory);
+        using var repository = new StudentRepository(result.Factory);
         return Ok(repository.GetAll());
     }
 
@@ -30,7 +30,7 @@ public class StudentsController : ControllerBase
     public IActionResult GetOne(int studentNumber, [FromQuery] string? db)
     {
         var result = _databaseResolver.Resolve(db);
-        var repository = new StudentRepository(result.Factory);
+        using var repository = new StudentRepository(result.Factory);
         var student = repository.Get(studentNumber);
 
         if (student is null)
@@ -45,7 +45,7 @@ public class StudentsController : ControllerBase
     public IActionResult Create([FromQuery] string? db, [FromBody] Student student)
     {
         var result = _databaseResolver.Resolve(db);
-        var repository = new StudentRepository(result.Factory);
+        using var repository = new StudentRepository(result.Factory);
 
         var existing = repository.Get(student.StudentNumber);
         if (existing is not null)
@@ -61,7 +61,7 @@ public class StudentsController : ControllerBase
     public IActionResult Update(int studentNumber, [FromQuery] string? db, [FromBody] Student student)
     {
         var result = _databaseResolver.Resolve(db);
-        var repository = new StudentRepository(result.Factory);
+        using var repository = new StudentRepository(result.Factory);
         var updated = repository.Update(studentNumber, student);
 
         if (!updated)
@@ -76,7 +76,7 @@ public class StudentsController : ControllerBase
     public IActionResult Delete(int studentNumber, [FromQuery] string? db)
     {
         var result = _databaseResolver.Resolve(db);
-        var repository = new StudentRepository(result.Factory);
+        using var repository = new StudentRepository(result.Factory);
         var deleted = repository.Delete(studentNumber);
 
         if (!deleted)
