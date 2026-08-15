@@ -1,11 +1,7 @@
--- پاک کردن کامل هر چه در دیتابیس است
 DROP SCHEMA public CASCADE;
 CREATE SCHEMA public;
 GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO PUBLIC;
--- جدول Students
--- نکته: دابل‌کوت‌ها عمداً هستن تا حروف بزرگ/کوچک حفظ بشن
--- و با خروجی PostgresCompiler کتابخانه SqlKata یکسان بشن
 CREATE TABLE "Students" (
     "StudentNumber" INT PRIMARY KEY,
     "FirstName" VARCHAR(100) NOT NULL,
@@ -13,7 +9,6 @@ CREATE TABLE "Students" (
     "Grade" INT NOT NULL,
     "IsMale" BOOLEAN NOT NULL
 );
--- داده‌های نمونه (کاملاً یکسان با SQL Server)
 INSERT INTO "Students" (
         "StudentNumber",
         "FirstName",
