@@ -2,7 +2,7 @@ using QueryBuilderWebApplication.Models;
 
 namespace QueryBuilderWebApplication.Abstractions;
 
-public interface IGetOne
+public interface IDatabaseResolver
 {
-    Task<Student?> GetOneAsync(int studentNumber);
+    DatabaseResolverResult Resolve(string? databaseName);
 }

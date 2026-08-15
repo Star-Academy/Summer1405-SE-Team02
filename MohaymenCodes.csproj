@@ -17,6 +17,8 @@
   <ItemGroup>
   <Compile Remove="QueryBuilder\**" />
   <Compile Remove="QueryBuilder.Tests\**" />
+  <Compile Remove="QueryBuilder.IntegrationTests\**" />
+  <Compile Remove="QueryBuilderWebApplication\**" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="ASP.NET\" />

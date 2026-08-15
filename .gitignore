@@ -492,3 +492,4 @@ $RECYCLE.BIN/
 
 QueryBuilder.Tests/coverage/
 dotnet-tools.json
+Database_Scripts/
