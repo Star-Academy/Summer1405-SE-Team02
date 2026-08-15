@@ -1,4 +1,4 @@
-namespace QueryBuilderWebApplication.Abstractions;
+namespace QueryBuilderWebApplication.Exceptions;
 
 public class InvalidDatabaseException : Exception
 {

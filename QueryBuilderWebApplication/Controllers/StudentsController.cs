@@ -1,90 +1,89 @@
 using Microsoft.AspNetCore.Mvc;
 using QueryBuilderWebApplication.Abstractions;
+using QueryBuilderWebApplication.Exceptions;
 using QueryBuilderWebApplication.Models;
-using SqlKata.Execution;
+using QueryBuilderWebApplication.Services;
 
 namespace QueryBuilderWebApplication.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+[ServiceFilter(typeof(Filters.ExceptionFilter))]
 public class StudentsController : ControllerBase
 {
-    private const string Table = "Students";
+    private readonly IDatabaseResolver _databaseResolver;
 
-    private readonly IDbFactory _dbFactory;
-
-    public StudentsController(IDbFactory dbFactory)
+    public StudentsController(IDatabaseResolver databaseResolver)
     {
-        _dbFactory = dbFactory;
+        _databaseResolver = databaseResolver;
     }
 
     [HttpGet]
     public IActionResult GetAll([FromQuery] string? db)
     {
-        var (factory, error) = ResolveDb(db);
-        if (error is not null) return error;
-        return Ok(factory!.Query(Table).Get<Student>());
+        var result = _databaseResolver.Resolve(db);
+        var repository = new StudentRepository(result.Factory);
+        return Ok(repository.GetAll());
     }
 
     [HttpGet("{studentNumber:int}")]
     public IActionResult GetOne(int studentNumber, [FromQuery] string? db)
     {
-        var (factory, error) = ResolveDb(db);
-        if (error is not null) return error;
+        var result = _databaseResolver.Resolve(db);
+        var repository = new StudentRepository(result.Factory);
+        var student = repository.Get(studentNumber);
 
-        var student = factory!.Query(Table)
-            .Where(nameof(Student.StudentNumber), studentNumber)
-            .FirstOrDefault<Student>();
+        if (student is null)
+        {
+            throw new StudentNotFoundException(studentNumber);
+        }
 
-        return student is null
-            ? NotFound(new { error = $"Student {studentNumber} not found." })
-            : Ok(student);
+        return Ok(student);
     }
 
     [HttpPost]
     public IActionResult Create([FromQuery] string? db, [FromBody] Student student)
     {
-        var (factory, error) = ResolveDb(db);
-        if (error is not null) return error;
+        var result = _databaseResolver.Resolve(db);
+        var repository = new StudentRepository(result.Factory);
 
-        factory!.Query(Table).Insert(student);
-        return CreatedAtAction(nameof(GetOne),
-            new { studentNumber = student.StudentNumber, db }, student);
+        var existing = repository.Get(student.StudentNumber);
+        if (existing is not null)
+        {
+            throw new StudentAlreadyExistsException(student.StudentNumber);
+        }
+
+        repository.Add(student);
+        return CreatedAtAction(nameof(GetOne), new { studentNumber = student.StudentNumber, db }, student);
     }
 
     [HttpPut("{studentNumber:int}")]
     public IActionResult Update(int studentNumber, [FromQuery] string? db, [FromBody] Student student)
     {
-        var (factory, error) = ResolveDb(db);
-        if (error is not null) return error;
+        var result = _databaseResolver.Resolve(db);
+        var repository = new StudentRepository(result.Factory);
+        var updated = repository.Update(studentNumber, student);
 
-        var affected = factory!.Query(Table)
-            .Where(nameof(Student.StudentNumber), studentNumber)
-            .Update(new { student.FirstName, student.LastName, student.Grade, student.IsMale });
+        if (!updated)
+        {
+            throw new StudentNotFoundException(studentNumber);
+        }
 
-        return affected == 0
-            ? NotFound(new { error = $"Student {studentNumber} not found." })
-            : NoContent();
+        return NoContent();
     }
 
     [HttpDelete("{studentNumber:int}")]
     public IActionResult Delete(int studentNumber, [FromQuery] string? db)
     {
-        var (factory, error) = ResolveDb(db);
-        if (error is not null) return error;
+        var result = _databaseResolver.Resolve(db);
+        var repository = new StudentRepository(result.Factory);
+        var deleted = repository.Delete(studentNumber);
 
-        var affected = factory!.Query(Table)
-            .Where(nameof(Student.StudentNumber), studentNumber)
-            .Delete();
+        if (!deleted)
+        {
+            throw new StudentNotFoundException(studentNumber);
+        }
 
-        return affected == 0
-            ? NotFound(new { error = $"Student {studentNumber} not found." })
-            : NoContent();
-    }
-
-    private (QueryFactory? Factory, IActionResult? Error) ResolveDb(string? db)
-    {
-        try { return (_dbFactory.Create(db ?? string.Empty), null); }
-        catch (InvalidDatabaseException ex) { return (null, BadRequest(new { error = ex.Message })); }
+        return NoContent();
     }
 }

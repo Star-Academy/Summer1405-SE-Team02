@@ -1,11 +1,13 @@
 using QueryBuilderWebApplication.Abstractions;
+using QueryBuilderWebApplication.Filters;
 using QueryBuilderWebApplication.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
-builder.Services.AddSingleton<IDbFactory, DbFactory>();
+builder.Services.AddSingleton<IDatabaseResolver, DatabaseResolver>();
+builder.Services.AddScoped<ExceptionFilter>();
 
 var app = builder.Build();
 
